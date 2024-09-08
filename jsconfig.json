@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": "frontend", // Set the base path for all imports
+    "paths": {
+      "@services/*": ["services/*"], // Alias for the services folder
+      "@components/*": ["components/*"], // Example alias for a components folder
+      "@pages/*": ["pages/*"], // Alias for the pages folder
+      "@styles/*": ["styles/*"] // Alias for the styles folder
+    }
+  }
+}
