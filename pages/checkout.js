@@ -250,7 +250,7 @@
 
 
 import React, { useState, useEffect } from "react";
-import { getProducts } from "../services/api";
+import { getProducts, checkoutRental } from "../services/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faMinus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
@@ -334,24 +334,9 @@ export default function Checkout() {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rental/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(rentalData),
-      });
+      const response = await checkoutRental(rentalData);
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const receiptUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = receiptUrl;
-        a.download = "rental-receipt.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
+      if (response) {
         setSelectedProducts([]);
         setCheckoutStatus("success");
         fetchProducts();
@@ -472,14 +457,16 @@ export default function Checkout() {
         Checkout
       </button>
 
+      {/* Checkout Success/Error Messages */}
       {checkoutStatus === "success" && (
-        <p className="mt-4 text-green-600">Checkout successful! Receipt downloaded.</p>
+        <p className="mt-4 text-green-600">Checkout successful! Inventory updated.</p>
       )}
       {checkoutStatus === "error" && (
         <p className="mt-4 text-red-600">Checkout failed. Please try again.</p>
       )}
 
-      <Link href="/rented-clothes">
+      {/* Add rented products link */}
+      <Link href="/rented-clothes" legacyBehavior>
         <button className="bg-green-500 text-white p-2 mt-4 ml-4">
           View Rented Products
         </button>
