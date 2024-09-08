@@ -1,19 +1,33 @@
 // Export the base API URL from environment variables
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Fetch all products
+
 export const getProducts = async () => {
-  try {
-    const res = await fetch(`${API_URL}/inventory`);
-    if (!res.ok) {
-      throw new Error("Failed to fetch products");
-    }
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+  const res = await fetch(`${API_URL}/inventory`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch products");
   }
+  return await res.json();
+};
+
+export const checkoutRental = async (rentalData) => {
+  const res = await fetch(`${API_URL}/rental/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(rentalData),
+  });
+  if (!res.ok) {
+    throw new Error("Checkout failed");
+  }
+  return await res.json();
+};
+
+export const getRentedClothes = async () => {
+  const res = await fetch(`${API_URL}/rental/rented`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch rented products");
+  }
+  return await res.json();
 };
 
 // Add a new product
@@ -56,6 +70,19 @@ export const updateProduct = async (id, product) => {
   }
 };
 
+// services/api.js
+
+export const markAsReturned = async (rentalId) => {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rental/return/${rentalId}`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to mark as returned");
+  }
+  return await response.json();
+};
+
+
 // Delete a product by ID
 export const deleteProduct = async (id) => {
   try {
@@ -71,22 +98,6 @@ export const deleteProduct = async (id) => {
   }
 };
 
-// Checkout rental
-export const checkoutRental = async (rentalData) => {
-  try {
-    const res = await fetch(`${API_URL}/rental/checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(rentalData),
-    });
-    if (!res.ok) {
-      throw new Error("Failed to checkout rental");
-    }
-    return await res.json();
-  } catch (error) {
-    console.error("Error during rental checkout:", error);
-    throw error;
-  }
-};
+
+
+
