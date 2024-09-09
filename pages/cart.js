@@ -1,44 +1,35 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Cart() {
-  const [cart, setCart] = useState([]);  // State for cart
+  const [cart, setCart] = useState([]);
   const router = useRouter();
 
-  // Load cart from local storage on page load
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) setCart(JSON.parse(savedCart));
   }, []);
 
-  const handleIncreaseQuantity = (productId) => {
-    const updatedCart = cart.map((p) =>
-      p._id === productId
-        ? { ...p, selectedQuantity: p.selectedQuantity + 1 }
-        : p
+  const handleQuantityChange = (productId, action) => {
+    const updatedCart = cart.map((product) =>
+      product._id === productId
+        ? {
+            ...product,
+            selectedQuantity:
+              action === 'increase'
+                ? product.selectedQuantity + 1
+                : Math.max(product.selectedQuantity - 1, 1),
+          }
+        : product
     );
     setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-  };
-
-  const handleDecreaseQuantity = (productId) => {
-    const updatedCart = cart
-      .map((p) =>
-        p._id === productId && p.selectedQuantity > 1
-          ? { ...p, selectedQuantity: p.selectedQuantity - 1 }
-          : p
-      )
-      .filter((p) => p.selectedQuantity > 0);
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
   const handleRemoveProduct = (productId) => {
     const updatedCart = cart.filter((product) => product._id !== productId);
     setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
   const calculateTotalPrice = () => {
@@ -46,10 +37,6 @@ export default function Cart() {
       (total, product) => total + product.price * product.selectedQuantity,
       0
     );
-  };
-
-  const proceedToCheckout = () => {
-    router.push("/checkout");  // Navigate to checkout
   };
 
   return (
@@ -64,15 +51,9 @@ export default function Cart() {
               <p>Price: ₹{product.price}</p>
               <p>Selected Quantity: {product.selectedQuantity}</p>
               <div className="product-actions">
-                <button onClick={() => handleIncreaseQuantity(product._id)}>
-                  +
-                </button>
-                <button onClick={() => handleDecreaseQuantity(product._id)}>
-                  -
-                </button>
-                <button onClick={() => handleRemoveProduct(product._id)}>
-                  Remove
-                </button>
+                <button onClick={() => handleQuantityChange(product._id, 'increase')}>+</button>
+                <button onClick={() => handleQuantityChange(product._id, 'decrease')}>-</button>
+                <button onClick={() => handleRemoveProduct(product._id)}>Remove</button>
               </div>
             </li>
           ))}
@@ -83,7 +64,7 @@ export default function Cart() {
 
       <h2>Total Price: ₹{calculateTotalPrice()}</h2>
 
-      <button onClick={proceedToCheckout} disabled={cart.length === 0}>
+      <button onClick={() => router.push('/checkout')} disabled={cart.length === 0}>
         Proceed to Checkout
       </button>
     </div>
