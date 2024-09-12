@@ -610,12 +610,15 @@
 
 
 
-
 import { useState, useEffect } from 'react';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faMinus, faTrash } from '@fortawesome/free-solid-svg-icons';
-import Link from 'next/link'; // Assuming you are using Next.js
+import { faPlus, faMinus, faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function Inventory() {
   const [products, setProducts] = useState([]);
@@ -626,7 +629,9 @@ export default function Inventory() {
   const [showDeleteSuccessMessage, setShowDeleteSuccessMessage] = useState(false);
   const [errors, setErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // Number of items per page
+  const [itemsPerPage] = useState(5);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [productToEdit, setProductToEdit] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -664,7 +669,7 @@ export default function Inventory() {
       setErrors({});
       fetchProducts();
       setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000); // Hide the message after 3 seconds
+      setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -674,9 +679,19 @@ export default function Inventory() {
     try {
       await updateProduct(id, updatedProduct);
       fetchProducts();
+      setShowEditModal(false);
     } catch (error) {
       console.error('Error updating product:', error);
     }
+  };
+
+  const openEditModal = (product) => {
+    setProductToEdit(product);
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    setProductToEdit({ ...productToEdit, [e.target.name]: e.target.value });
   };
 
   const confirmDeleteProduct = (id) => {
@@ -685,13 +700,14 @@ export default function Inventory() {
   };
 
   const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
     try {
       await deleteProduct(productToDelete);
       fetchProducts();
       setShowDeleteModal(false);
       setProductToDelete(null);
       setShowDeleteSuccessMessage(true);
-      setTimeout(() => setShowDeleteSuccessMessage(false), 3000); // Hide the delete success message after 3 seconds
+      setTimeout(() => setShowDeleteSuccessMessage(false), 3000);
     } catch (error) {
       console.error('Error deleting product:', error);
       setShowDeleteModal(false);
@@ -699,13 +715,63 @@ export default function Inventory() {
     }
   };
 
-  // Calculate current products to display based on pagination
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
 
-  // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const categories = [...new Set(products.map((product) => product.category))];
+  const quantities = categories.map((category) =>
+    products.reduce((total, product) => (product.category === category ? total + product.quantity : total), 0)
+  );
+
+  const chartData = {
+    labels: categories,
+    datasets: [
+      {
+        data: quantities,
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+        hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        borderJoinStyle: 'round',
+        hoverOffset: 15,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          boxWidth: 20,
+          padding: 20,
+          color: '#333',
+          font: {
+            size: 14,
+            family: 'Arial, sans-serif',
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        bodyFont: {
+          size: 14,
+        },
+        borderColor: '#ffffff',
+        borderWidth: 1,
+      },
+    },
+    animation: {
+      animateScale: true,
+      animateRotate: true,
+    },
+    cutout: '20%',
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4">
@@ -716,20 +782,7 @@ export default function Inventory() {
           role="alert"
           className="alert alert-success mb-4 flex items-center space-x-2 bg-green-100 p-4 rounded-lg shadow-md text-green-800"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Product added Successfully in Inventory!</span>
+          <span>Product added successfully in Inventory!</span>
         </div>
       )}
 
@@ -739,19 +792,6 @@ export default function Inventory() {
             role="alert"
             className="alert alert-error flex items-center space-x-2 bg-red-100 p-4 rounded-lg shadow-md text-red-800"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
             <span>Product has been successfully deleted!</span>
           </div>
         </div>
@@ -826,6 +866,7 @@ export default function Inventory() {
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Category</th>
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Quantity</th>
               <th className="py-3 px-4 text-left font-semibold text-gray-700">Price</th>
+              <th className="py-3 px-4 text-center font-semibold text-gray-700">Edit</th>
               <th className="py-3 px-4 text-center font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
@@ -836,6 +877,14 @@ export default function Inventory() {
                 <td className="py-3 px-4 border-b">{product.category}</td>
                 <td className="py-3 px-4 border-b text-center">{product.quantity}</td>
                 <td className="py-3 px-4 border-b text-center">₹{product.price}</td>
+                <td className="py-3 px-4 border-b text-center">
+                  <button
+                    onClick={() => openEditModal(product)}
+                    className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition duration-200"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </button>
+                </td>
                 <td className="py-3 px-4 border-b text-center">
                   <div className="inline-flex space-x-2">
                     <button
@@ -863,7 +912,7 @@ export default function Inventory() {
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {/* Pagination Controls */}
         <div className="flex justify-center mt-4">
           {Array.from({ length: Math.ceil(products.length / itemsPerPage) }, (_, index) => (
             <button
@@ -881,19 +930,84 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* Back to Main Page Button */}
-      <div className="mt-6 flex justify-center">
-        <Link href="/" legacyBehavior>
-          <button className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md transition duration-200">
-            Back to Main Page
-          </button>
-        </Link>
-      </div>
+      {/* Edit Product Modal */}
+      {showEditModal && productToEdit && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50"> {/* Adjusted z-index */}
+          <div className="bg-white p-6 rounded-lg shadow-lg z-60"> {/* Ensures modal content is on top */}
+            <h2 className="text-lg font-semibold mb-4">Edit Product</h2>
+            <form className="grid grid-cols-1 gap-6">
+              <label className="block">
+                <span className="text-gray-700">Product Name:</span>
+                <input
+                  type="text"
+                  name="name"
+                  value={productToEdit.name}
+                  onChange={handleEditChange}
+                  className="p-3 border border-gray-300 rounded w-full"
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="text-gray-700">Category:</span>
+                <select
+                  name="category"
+                  value={productToEdit.category}
+                  onChange={handleEditChange}
+                  className="p-3 border border-gray-300 rounded w-full"
+                  required
+                >
+                  <option value="Jeans">Jeans</option>
+                  <option value="Shirts">Shirts</option>
+                  <option value="T-Shirts">T-Shirts</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-gray-700">Quantity:</span>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={productToEdit.quantity}
+                  onChange={handleEditChange}
+                  className="p-3 border border-gray-300 rounded w-full"
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="text-gray-700">Price:</span>
+                <input
+                  type="number"
+                  name="price"
+                  value={productToEdit.price}
+                  onChange={handleEditChange}
+                  className="p-3 border border-gray-300 rounded w-full"
+                  required
+                />
+              </label>
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateProduct(productToEdit._id, productToEdit)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Update
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"> {/* Adjusted z-index */}
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center z-60"> {/* Ensures modal content is on top */}
             <h2 className="text-lg font-semibold mb-4">Are you sure you want to delete this product?</h2>
             <div className="flex justify-center space-x-4">
               <button
@@ -912,6 +1026,16 @@ export default function Inventory() {
           </div>
         </div>
       )}
+
+      {/* Pie Chart Section */}
+      <div className="mt-8 flex justify-center">
+        <div className="w-full max-w-xs md:max-w-sm lg:max-w-md">
+          <h2 className="text-2xl font-bold text-center mb-4">Inventory Distribution by Category</h2>
+          <div className="relative h-64">
+            <Pie data={chartData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
