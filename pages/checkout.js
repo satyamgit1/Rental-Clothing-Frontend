@@ -618,7 +618,6 @@
 // }
 
 
-
 import React, { useState, useEffect } from 'react';
 import { getProducts, checkoutRental } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -630,7 +629,7 @@ import Link from 'next/link';
 export default function Checkout() {
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const [userData, setUserData] = useState({ name: '', rentalDate: '', returnDate: '' });
+  const [userData, setUserData] = useState({ name: '', mobile: '', rentalDate: '', returnDate: '' });
   const [checkoutStatus, setCheckoutStatus] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -638,7 +637,7 @@ export default function Checkout() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of products per page
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchProducts();
@@ -648,7 +647,7 @@ export default function Checkout() {
     try {
       const data = await getProducts();
       setProducts(data);
-      setFilteredProducts(data); // Initialize with all products
+      setFilteredProducts(data);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -671,9 +670,11 @@ export default function Checkout() {
     const existingProduct = selectedProducts.find((p) => p._id === product._id);
     const updatedProducts = existingProduct
       ? selectedProducts.map((p) =>
-          p._id === product._id ? { ...p, selectedQuantity: p.selectedQuantity + 1 } : p
+          p._id === product._id
+            ? { ...p, selectedQuantity: p.selectedQuantity + 1, advanceAmount: p.advanceAmount || 0 }
+            : p
         )
-      : [...selectedProducts, { ...product, selectedQuantity: 1 }];
+      : [...selectedProducts, { ...product, selectedQuantity: 1, advanceAmount: 0 }];
 
     setSelectedProducts(updatedProducts);
   };
@@ -693,6 +694,20 @@ export default function Checkout() {
     setSelectedProducts(updatedProducts);
   };
 
+  const handlePriceChange = (productId, newPrice) => {
+    const updatedProducts = selectedProducts.map((product) =>
+      product._id === productId ? { ...product, price: parseFloat(newPrice) } : product
+    );
+    setSelectedProducts(updatedProducts);
+  };
+
+  const handleAdvanceChange = (productId, amount) => {
+    const updatedProducts = selectedProducts.map((product) =>
+      product._id === productId ? { ...product, advanceAmount: parseFloat(amount) || 0 } : product
+    );
+    setSelectedProducts(updatedProducts);
+  };
+
   const handleRemoveProduct = (productId) => {
     setSelectedProducts(selectedProducts.filter((p) => p._id !== productId));
   };
@@ -704,8 +719,13 @@ export default function Checkout() {
     );
   };
 
+  const calculateRemainingAmount = () => {
+    const totalAdvance = selectedProducts.reduce((acc, product) => acc + (product.advanceAmount || 0), 0);
+    return calculateTotalPrice() - totalAdvance;
+  };
+
   const handleCheckout = async () => {
-    if (!userData.name || !userData.rentalDate || !userData.returnDate) {
+    if (!userData.name || !userData.mobile || !userData.rentalDate || !userData.returnDate) {
       setErrorMessage('Please fill out all fields before checking out.');
       setShowErrorModal(true);
       return;
@@ -724,7 +744,9 @@ export default function Checkout() {
         name: product.name,
         quantity: product.selectedQuantity,
         price: product.price,
+        advanceAmount: product.advanceAmount,
       })),
+      remainingAmount: calculateRemainingAmount(),
     };
 
     try {
@@ -752,15 +774,19 @@ export default function Checkout() {
     doc.setFontSize(18);
     doc.text('Checkout Summary', 14, 22);
     doc.autoTable({
-      head: [['Product Name', 'Category', 'Price (₹)', 'Quantity']],
+      head: [['Product Name', 'Category', 'Price (₹)', 'Quantity', 'Advance Amount (₹)']],
       body: selectedProducts.map((product) => [
         product.name,
         product.category,
         `₹${product.price}`,
         product.selectedQuantity.toString(),
+        `₹${product.advanceAmount}`,
       ]),
       startY: 30,
     });
+    doc.text(`Total Amount: ₹${calculateTotalPrice()}`, 14, doc.lastAutoTable.finalY + 10);
+    doc.text(`Total Advance: ₹${selectedProducts.reduce((acc, p) => acc + (p.advanceAmount || 0), 0)}`, 14, doc.lastAutoTable.finalY + 20);
+    doc.text(`Remaining Amount: ₹${calculateRemainingAmount()}`, 14, doc.lastAutoTable.finalY + 30);
     doc.save('checkout-summary.pdf');
   };
 
@@ -774,7 +800,7 @@ export default function Checkout() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-      <form className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <form className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
         <label className="block">
           Your Name:
           <input
@@ -782,6 +808,17 @@ export default function Checkout() {
             value={userData.name}
             onChange={(e) => setUserData({ ...userData, name: e.target.value })}
             placeholder="Your Name"
+            className="p-3 border border-gray-300 rounded w-full"
+            required
+          />
+        </label>
+        <label className="block">
+          Mobile Number:
+          <input
+            type="tel"
+            value={userData.mobile}
+            onChange={(e) => setUserData({ ...userData, mobile: e.target.value })}
+            placeholder="Mobile Number"
             className="p-3 border border-gray-300 rounded w-full"
             required
           />
@@ -808,7 +845,6 @@ export default function Checkout() {
         </label>
       </form>
 
-      {/* Search Field */}
       <div className="mb-6 flex flex-col md:flex-row items-center md:justify-between gap-4">
         <input
           type="text"
@@ -819,7 +855,6 @@ export default function Checkout() {
         />
       </div>
 
-      {/* Available Products */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-8 overflow-x-auto">
         <h2 className="text-2xl font-semibold mb-4">Available Products:</h2>
         <table className="min-w-full bg-white border border-gray-300 rounded-lg">
@@ -850,7 +885,6 @@ export default function Checkout() {
           </tbody>
         </table>
 
-        {/* Pagination Controls */}
         <div className="flex justify-center mt-4">
           {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, index) => (
             <button
@@ -868,7 +902,6 @@ export default function Checkout() {
         </div>
       </div>
 
-      {/* Selected Products Section */}
       <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-8 overflow-x-auto">
         <h2 className="text-2xl font-semibold mb-4">Selected Products:</h2>
         {selectedProducts.length > 0 ? (
@@ -879,6 +912,7 @@ export default function Checkout() {
                 <th className="py-2 px-4 text-left font-medium text-gray-700">Category</th>
                 <th className="py-2 px-4 text-left font-medium text-gray-700">Price</th>
                 <th className="py-2 px-4 text-center font-medium text-gray-700">Quantity</th>
+                <th className="py-2 px-4 text-center font-medium text-gray-700">Advance Amount</th>
                 <th className="py-2 px-4 text-center font-medium text-gray-700">Actions</th>
               </tr>
             </thead>
@@ -887,8 +921,23 @@ export default function Checkout() {
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 border-b">{product.name}</td>
                   <td className="py-3 px-4 border-b">{product.category}</td>
-                  <td className="py-3 px-4 border-b">₹{product.price}</td>
+                  <td className="py-3 px-4 border-b">
+                    <input
+                      type="number"
+                      value={product.price}
+                      onChange={(e) => handlePriceChange(product._id, e.target.value)}
+                      className="w-20 p-1 border border-gray-300 rounded text-center"
+                    />
+                  </td>
                   <td className="py-3 px-4 border-b text-center">{product.selectedQuantity}</td>
+                  <td className="py-3 px-4 border-b text-center">
+                    <input
+                      type="number"
+                      value={product.advanceAmount}
+                      onChange={(e) => handleAdvanceChange(product._id, e.target.value)}
+                      className="p-2 border border-gray-300 rounded w-full text-center"
+                    />
+                  </td>
                   <td className="py-3 px-4 border-b text-center">
                     <div className="inline-flex space-x-2">
                       <button
@@ -919,9 +968,9 @@ export default function Checkout() {
           <p className="text-center text-lg font-semibold text-gray-700">No products selected yet.</p>
         )}
 
-        {/* Total Price Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mt-4 space-y-4 md:space-y-0">
           <h2 className="text-lg font-semibold">Total Price: ₹{calculateTotalPrice()}</h2>
+          <h2 className="text-lg font-semibold">Remaining Amount: ₹{calculateRemainingAmount()}</h2>
           <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 space-x-0 md:space-x-4">
             <button
               onClick={handleCheckout}
@@ -977,7 +1026,6 @@ export default function Checkout() {
         </button>
       )}
 
-      {/* Back to Main Page Button */}
       <div className="mt-6 flex justify-center">
         <Link href="/" legacyBehavior>
           <button className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-lg transition duration-200">

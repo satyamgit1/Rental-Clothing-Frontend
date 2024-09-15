@@ -51,6 +51,12 @@ export default function Home() {
           >
             View Rented Clothes
           </a>
+          <a
+            href="/RentedUsers"
+            className="bg-gradient-to-r from-purple-500 to-pink-400 text-white px-8 py-4 rounded-full shadow-lg transform hover:scale-105 hover:shadow-2xl transition-transform duration-300"
+          >
+            Balance Amount
+          </a>
         </div>
       </header>
 

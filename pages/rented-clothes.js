@@ -1,10 +1,9 @@
-
 // import React, { useState, useEffect } from "react";
 // import { getRentedClothes, markAsReturned, deleteRental } from "../services/api";
 // import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 // import { faTrash } from "@fortawesome/free-solid-svg-icons";
-// import { Pie } from 'react-chartjs-2';
-// import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+// import { Pie } from "react-chartjs-2";
+// import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 // // Register Chart.js components
 // ChartJS.register(ArcElement, Tooltip, Legend);
@@ -129,49 +128,57 @@
 //     setCurrentPage(1);
 //   };
 
-//   // Pie chart data for rented and returned clothes
-//   const data = {
-//     labels: ['T-Shirts', 'Jeans', 'Shirts'],
+//   // Calculate returned and not returned counts
+//   const returnedCount = rentedClothes.filter((rental) => rental.returned).length;
+//   const notReturnedCount = rentedClothes.length - returnedCount;
+
+//   // Pie chart data for returned and not returned clothes
+//   const pieChartData = {
+//     labels: ["Returned", "Not Returned"],
 //     datasets: [
 //       {
-//         label: 'Rented Clothes',
-//         data: [report.rented.TShirts, report.rented.Jeans, report.rented.Shirts],
-//         backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(255, 206, 86, 0.6)'],
-//         borderColor: ['rgba(54, 162, 235, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)'],
-//         borderWidth: 1,
-//       },
-//       {
-//         label: 'Returned Clothes',
-//         data: [report.returned.TShirts, report.returned.Jeans, report.returned.Shirts],
-//         backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(255, 159, 64, 0.6)'],
-//         borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 99, 132, 1)', 'rgba(255, 159, 64, 1)'],
-//         borderWidth: 1,
+//         data: [returnedCount, notReturnedCount],
+//         backgroundColor: ["#36A2EB", "#FF6384"],
+//         hoverBackgroundColor: ["#36A2EB", "#FF6384"],
+//         borderColor: ["#ffffff", "#ffffff"],
+//         borderWidth: 2,
+//         hoverOffset: 15,
 //       },
 //     ],
 //   };
 
-//   const options = {
+//   const pieChartOptions = {
 //     responsive: true,
+//     maintainAspectRatio: false,
 //     plugins: {
 //       legend: {
-//         position: 'top',
+//         position: "top",
 //       },
 //       title: {
 //         display: true,
-//         text: 'Rented and Returned Clothes',
+//         text: "Returned vs Not Returned Clothes",
 //       },
 //     },
 //   };
 
 //   return (
 //     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-//       <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">Rented Products</h1>
+//       <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
+//         Rented Products
+//       </h1>
 
 //       {errorMessage && <p className="text-red-500 mb-4 text-center">{errorMessage}</p>}
 
-//       {/* Pie Chart */}
-//       <div className="mb-6">
-//         <Pie data={data} options={options} />
+//       {/* Pie Chart for Returned Status */}
+//       <div className="mb-6 flex justify-center">
+//         <div className="w-full max-w-xs md:max-w-sm lg:max-w-md">
+//           <h2 className="text-2xl font-bold text-center mb-4">
+//             Return Status of Rented Clothes
+//           </h2>
+//           <div className="relative h-64">
+//             <Pie data={pieChartData} options={pieChartOptions} />
+//           </div>
+//         </div>
 //       </div>
 
 //       {/* Date Filter and Rental List */}
@@ -215,27 +222,52 @@
 //           <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
 //             <thead>
 //               <tr className="bg-gray-100">
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Name</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Rental Date</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Return Date</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Total Price</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Products</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Returned</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Mark as Returned</th>
-//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Actions</th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Name
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Rental Date
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Return Date
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Total Price
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Products
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Returned
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Mark as Returned
+//                 </th>
+//                 <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+//                   Actions
+//                 </th>
 //               </tr>
 //             </thead>
 //             <tbody>
 //               {currentRecords.map((rental) => (
 //                 <tr key={rental._id} className="hover:bg-gray-50 transition-all">
-//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">{rental.name}</td>
-//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">{new Date(rental.rentalDate).toLocaleDateString()}</td>
-//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">{new Date(rental.returnDate).toLocaleDateString()}</td>
-//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">₹{rental.totalPrice}</td>
+//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+//                     {rental.name}
+//                   </td>
+//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+//                     {new Date(rental.rentalDate).toLocaleDateString()}
+//                   </td>
+//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+//                     {new Date(rental.returnDate).toLocaleDateString()}
+//                   </td>
+//                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+//                     ₹{rental.totalPrice}
+//                   </td>
 //                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
 //                     {rental.products.map((product, index) => (
 //                       <div key={index} className="mb-1">
-//                         {product.name} (x{product.quantity}) - ₹{product.price * product.quantity}
+//                         {product.name} (x{product.quantity}) - ₹
+//                         {product.price * product.quantity}
 //                       </div>
 //                     ))}
 //                   </td>
@@ -270,7 +302,9 @@
 //           </table>
 //         </div>
 //       ) : (
-//         <p className="text-center text-lg font-semibold text-gray-700 mt-6">No rented products available for the selected date range.</p>
+//         <p className="text-center text-lg font-semibold text-gray-700 mt-6">
+//           No rented products available for the selected date range.
+//         </p>
 //       )}
 
 //       {/* Pagination Controls */}
@@ -313,12 +347,15 @@
 //     </div>
 //   );
 // }
+
+
 import React, { useState, useEffect } from "react";
 import { getRentedClothes, markAsReturned, deleteRental } from "../services/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import * as XLSX from "xlsx"; // Import xlsx library
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -407,6 +444,45 @@ export default function RentedClothes() {
     }
   };
 
+  const handleDateRangeChange = () => {
+    if (startDate && endDate) {
+      const filtered = rentedClothes.filter((rental) => {
+        const rentalDate = new Date(rental.rentalDate);
+        return rentalDate >= new Date(startDate) && rentalDate <= new Date(endDate);
+      });
+      setFilteredClothes(filtered);
+      calculateReport(filtered);
+    } else {
+      setFilteredClothes(rentedClothes);
+      calculateReport(rentedClothes);
+    }
+    setCurrentPage(1);
+  };
+
+  // Function to generate Excel file based on filtered data
+  const generateExcel = () => {
+    const worksheetData = filteredClothes.map((rental) => ({
+      Name: rental.name,
+      "Rental Date": new Date(rental.rentalDate).toLocaleDateString(),
+      "Return Date": new Date(rental.returnDate).toLocaleDateString(),
+      "Total Price": `₹${rental.totalPrice}`,
+      Products: rental.products
+        .map(
+          (product) =>
+            `${product.name} (x${product.quantity}) - ₹${product.price * product.quantity}`
+        )
+        .join(", "),
+      Returned: rental.returned ? "Yes" : "No",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Rented Clothes");
+
+    // Create Excel file and trigger download
+    XLSX.writeFile(workbook, "Filtered_Rented_Clothes.xlsx");
+  };
+
   const totalPages = Math.ceil(filteredClothes.length / recordsPerPage);
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -428,34 +504,19 @@ export default function RentedClothes() {
     setCurrentPage(pageNumber);
   };
 
-  const handleDateRangeChange = () => {
-    if (startDate && endDate) {
-      const filtered = rentedClothes.filter((rental) => {
-        const rentalDate = new Date(rental.rentalDate);
-        return rentalDate >= new Date(startDate) && rentalDate <= new Date(endDate);
-      });
-      setFilteredClothes(filtered);
-      calculateReport(filtered);
-    } else {
-      setFilteredClothes(rentedClothes);
-      calculateReport(rentedClothes);
-    }
-    setCurrentPage(1);
-  };
-
   // Calculate returned and not returned counts
   const returnedCount = rentedClothes.filter((rental) => rental.returned).length;
   const notReturnedCount = rentedClothes.length - returnedCount;
 
   // Pie chart data for returned and not returned clothes
   const pieChartData = {
-    labels: ['Returned', 'Not Returned'],
+    labels: ["Returned", "Not Returned"],
     datasets: [
       {
         data: [returnedCount, notReturnedCount],
-        backgroundColor: ['#36A2EB', '#FF6384'],
-        hoverBackgroundColor: ['#36A2EB', '#FF6384'],
-        borderColor: ['#ffffff', '#ffffff'],
+        backgroundColor: ["#36A2EB", "#FF6384"],
+        hoverBackgroundColor: ["#36A2EB", "#FF6384"],
+        borderColor: ["#ffffff", "#ffffff"],
         borderWidth: 2,
         hoverOffset: 15,
       },
@@ -467,25 +528,29 @@ export default function RentedClothes() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
       },
       title: {
         display: true,
-        text: 'Returned vs Not Returned Clothes',
+        text: "Returned vs Not Returned Clothes",
       },
     },
   };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">Rented Products</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
+        Rented Products
+      </h1>
 
       {errorMessage && <p className="text-red-500 mb-4 text-center">{errorMessage}</p>}
 
       {/* Pie Chart for Returned Status */}
       <div className="mb-6 flex justify-center">
         <div className="w-full max-w-xs md:max-w-sm lg:max-w-md">
-          <h2 className="text-2xl font-bold text-center mb-4">Return Status of Rented Clothes</h2>
+          <h2 className="text-2xl font-bold text-center mb-4">
+            Return Status of Rented Clothes
+          </h2>
           <div className="relative h-64">
             <Pie data={pieChartData} options={pieChartOptions} />
           </div>
@@ -528,32 +593,66 @@ export default function RentedClothes() {
         </button>
       </div>
 
+      <div className="flex justify-between items-center mb-6">
+        <button
+          onClick={generateExcel}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
+        >
+          Export to Excel
+        </button>
+      </div>
+
       {currentRecords.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
             <thead>
               <tr className="bg-gray-100">
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Name</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Rental Date</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Return Date</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Total Price</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Products</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Returned</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Mark as Returned</th>
-                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">Actions</th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Name
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Rental Date
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Return Date
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Total Price
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Products
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Returned
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Mark as Returned
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-left text-gray-700">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {currentRecords.map((rental) => (
                 <tr key={rental._id} className="hover:bg-gray-50 transition-all">
-                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">{rental.name}</td>
-                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">{new Date(rental.rentalDate).toLocaleDateString()}</td>
-                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">{new Date(rental.returnDate).toLocaleDateString()}</td>
-                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">₹{rental.totalPrice}</td>
+                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+                    {rental.name}
+                  </td>
+                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+                    {new Date(rental.rentalDate).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+                    {new Date(rental.returnDate).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
+                    ₹{rental.totalPrice}
+                  </td>
                   <td className="py-3 px-4 text-xs sm:text-sm md:text-base border-b text-gray-800">
                     {rental.products.map((product, index) => (
                       <div key={index} className="mb-1">
-                        {product.name} (x{product.quantity}) - ₹{product.price * product.quantity}
+                        {product.name} (x{product.quantity}) - ₹
+                        {product.price * product.quantity}
                       </div>
                     ))}
                   </td>
@@ -588,7 +687,9 @@ export default function RentedClothes() {
           </table>
         </div>
       ) : (
-        <p className="text-center text-lg font-semibold text-gray-700 mt-6">No rented products available for the selected date range.</p>
+        <p className="text-center text-lg font-semibold text-gray-700 mt-6">
+          No rented products available for the selected date range.
+        </p>
       )}
 
       {/* Pagination Controls */}
